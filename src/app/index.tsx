@@ -1,98 +1,263 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
+} from 'react-native';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+import {
+  SafeAreaView
+} from 'react-native-safe-area-context';
+
+import { Chamado } from '../models/Chamado';
+
+export default function Index() {
+
+  const [titulo, setTitulo] = useState<string>('');
+  const [descricao, setDescricao] = useState<string>('');
+
+  const [chamados, setChamados] =
+    useState<Chamado[]>([]);
+
+  function cadastrarChamado() {
+
+    if (titulo.trim() === '') {
+      Alert.alert(
+        'Atenção',
+        'Informe o título do chamado.'
+      );
+      return;
+    }
+
+    if (descricao.trim() === '') {
+      Alert.alert(
+        'Atenção',
+        'Informe a descrição do chamado.'
+      );
+      return;
+    }
+
+    const novoChamado: Chamado = {
+      id: chamados.length + 1,
+      titulo: titulo.trim(),
+      descricao: descricao.trim(),
+      status: 'NOVO'
+    };
+
+    setChamados(chamadosAtuais => [...chamadosAtuais,
+      novoChamado
+    ]);
+
+    setTitulo('');
+    setDescricao('');
+
+    Alert.alert(
+      'Sucesso',
+      `Chamado ${novoChamado.id} cadastrado com sucesso.`
     );
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <SafeAreaView style={estilos.container}>
+
+      <ScrollView>
+
+        <View style={estilos.cabecalho}>
+
+          <Text style={estilos.titulo}>
+            HelpDesk
+          </Text>
+
+          <Text style={estilos.subtitulo}>
+            Gerenciamento de chamados de TI
+          </Text>
+
+        </View>
+
+        <View style={estilos.conteudo}>
+
+          <Text style={estilos.tituloSecao}>
+            Novo chamado
+          </Text>
+
+          <Text style={estilos.rotulo}>
+            Título
+          </Text>
+
+          <TextInput
+            style={estilos.campo}
+            placeholder="Ex.: Computador não liga"
+            value={titulo}
+            onChangeText={setTitulo}
+          />
+
+          <Text style={estilos.rotulo}>
+            Descrição
+          </Text>
+
+          <TextInput
+            style={[
+              estilos.campo,
+              estilos.campoDescricao
+            ]}
+            placeholder="Descreva o problema encontrado"
+            value={descricao}
+            onChangeText={setDescricao}
+            multiline
+          />
+
+          <Pressable
+            style={estilos.botao}
+            onPress={cadastrarChamado}
+          >
+
+            <Text style={estilos.textoBotao}>
+              Cadastrar chamado
+            </Text>
+
+          </Pressable>
+
+          <Text style={estilos.quantidade}>
+            Chamados cadastrados: {chamados.length}
+          </Text>
+
+          <View style={estilos.lista}>
+            {chamados.map(chamado => (
+              <View
+                key={chamado.id}
+                style={estilos.cardChamado}
+              >
+
+                <Text style={estilos.tituloChamado}>
+                  {chamado.titulo}
+                </Text>
+
+                <Text style={estilos.descricaoChamado}>
+                  {chamado.descricao}
+                </Text>
+
+                <Text style={estilos.statusChamado}>
+                  {chamado.status}
+                </Text>
+
+              </View>
+
+            ))}
+
+          </View>
+
+        </View>
+
+      </ScrollView>
+
+    </SafeAreaView>
   );
 }
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+const estilos = StyleSheet.create({
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
-  );
-}
-
-const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: '#f4f6f8'
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+
+  cabecalho: {
+    backgroundColor: '#1f2937',
+    padding: 24
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+
+  titulo: {
+    color: '#ffffff',
+    fontSize: 28,
+    fontWeight: 'bold'
   },
-  title: {
-    textAlign: 'center',
+
+  subtitulo: {
+    color: '#d1d5db',
+    marginTop: 4,
+    fontSize: 15
   },
-  code: {
-    textTransform: 'uppercase',
+
+  conteudo: {
+    padding: 24
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+
+  tituloSecao: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 20
   },
+
+  rotulo: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 6
+  },
+
+  campo: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 16
+  },
+
+  campoDescricao: {
+    height: 100,
+    textAlignVertical: 'top'
+  },
+
+  botao: {
+    backgroundColor: '#2563eb',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+
+  textoBotao: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold'
+  },
+
+  quantidade: {
+    marginTop: 24,
+    fontSize: 16,
+    fontWeight: '600'
+  },
+
+  lista: {
+    marginTop: 20
+  },
+
+  cardChamado: {
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12
+  },
+
+  tituloChamado: {
+    fontSize: 18,
+    fontWeight: 'bold'
+  },
+
+  descricaoChamado: {
+    fontSize: 15,
+    marginTop: 6
+  },
+
+  statusChamado: {
+    marginTop: 10,
+    fontSize: 13,
+    fontWeight: 'bold'
+  }
+
 });
